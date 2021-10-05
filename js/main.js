@@ -25,13 +25,13 @@ menuButton.addEventListener('click', function () {
 */
 
 // создаем элемент
-const getElement = (tagName, classNames, attributes) =>{
+const getElement = (tagName, classNames, attributes) => {
 	const element = document.createElement(tagName);
-	if (classNames){
+	if (classNames) {
 		element.classList.add(...classNames);
 	}
-	if(attributes){
-		for(const attribute in attributes){
+	if (attributes) {
+		for (const attribute in attributes) {
 			element[attribute] = attributes[attribute];
 		}
 	}
@@ -43,7 +43,7 @@ const createHeader = (param) => {
 	const container = getElement("div", ["container"]);
 	const wrapper = getElement("div", ["header"]);
 	// логотип
-	if(param.header.logo){
+	if (param.header.logo) {
 		const logo = getElement("img", ["logo"], {
 			src: param.header.logo,
 			alt: "Логотип " + param.title
@@ -51,7 +51,19 @@ const createHeader = (param) => {
 		wrapper.append(logo);
 	}
 	// социальные иконки
-	if(param.header.social){
+	if (param.header.menu) {
+		const nav = getElement("nav", ["menu-list"]);
+		const allMenuLink = param.header.menu.map(item => {
+			const link = getElement("a", ["menu-link"], {
+				href: item.link,
+				textContent: item.title,
+			});
+			return link;
+		})
+		nav.append(...allMenuLink);
+		wrapper.append(nav);
+	}
+	if (param.header.social) {
 		const socialWrapper = getElement('div', ["social"]);
 		const allSocial = param.header.social.map(item => {
 			const socialLink = getElement("a", ["social-link"]);
@@ -61,7 +73,7 @@ const createHeader = (param) => {
 			}));
 
 			socialLink.href = item.link;
-			
+
 			return socialLink;
 		});
 
@@ -69,9 +81,7 @@ const createHeader = (param) => {
 		wrapper.append(socialWrapper);
 	}
 	// меню
-	if(param.header.menu){
 
-	}
 	header.append(container);
 	container.append(wrapper);
 
@@ -82,18 +92,102 @@ const movieConstructor = (selector, options) => {
 
 	const app = document.querySelector(selector);
 	app.classList.add('body-app');
-	if(options.header){
+	app.style.backgroundImage = options.background ?
+		`url("${options.background}")` : '';
+	document.title = options.title;
+
+	if (options.header) {
 		app.append(createHeader(options));
 	}
-
+	if (options.main) {
+		app.append(createMain(options));
+	}
 };
+const createMain = ({
+	title,
+	main: {
+		genre,
+		rating,
+		description,
+		trailer
+	}
+}) => {
+	const main = getElement("main");
+	const container = getElement("div", ["container"]);
+	main.append(container);
+	const wrapper = getElement("div", ["main-content"]);
+	container.append(wrapper);
+	const content = getElement("div", ["content"]);
+	wrapper.append(content);
 
+	if (genre) {
+		const genreSpan = getElement("span", ["genre", "animated", "fadeInRight"], {
+			textContent: genre
+		});
+		content.append(genreSpan);
+	}
+	if(rating){
+		const ratingBlock = getElement("div", ["rating", "animated", "fadeInRight"], {});
+		const ratingStars = getElement("div", ["rating-stars"]);
+		const ratingNumber = getElement("div", ["rating-number"], {
+			textContent: `${rating}/10`,
+		});	
+		for (let i = 0; i < 10; i++){
+			const star = getElement("img", ["star"], {
+				alt: i ? "" : `Рейтинг ${rating} из 10`,
+				src:  i < rating ? "img/star.svg" : "img/star-o.svg",
+			});
+			ratingStars.append(star);
+		}
+
+		ratingBlock.append(ratingStars, ratingNumber);
+		content.append(ratingBlock);
+	}
+	content.append(getElement("h1", ["main-title", "animated", "fadeInRight"], {
+		textContent: title,
+	}))
+	if(description){
+		const descriptionElem = getElement("p",
+		["main-description", "animated", "fadeInRight"],
+		{textContent: description},
+		)
+		content.append(descriptionElem);
+	}
+	if(trailer){
+		const youtubeLink = getElement("a", 
+		["button", "animated", "fadeInRight", "youtube-modal"], 
+		{
+			href: trailer,
+			textContent: "Смотреть трейлер"
+		});
+
+		const youtubeImgLink = getElement("a", 
+		["play", "youtube-modal"],
+		{
+			href: trailer,
+			ariaLabel: "Смотреть трейлер"
+		}
+		)
+		const iconPlay = getElement("img", ["play-img"],
+		{
+			src: "img/play.svg",
+			alt: "",
+			ariaHidden: true,
+		}
+		)
+
+		content.append(youtubeLink);
+		youtubeImgLink.append(iconPlay);
+		wrapper.append(youtubeImgLink);
+	}
+	return main;
+}
 movieConstructor('.app', {
 	title: "Ведьмак",
+	background: "witcher/background.jpg",
 	header: {
 		logo: "witcher/logo.png",
-		social: [
-			{
+		social: [{
 				title: "Twitter",
 				link: "#",
 				image: "witcher/social/twitter.svg",
@@ -108,13 +202,12 @@ movieConstructor('.app', {
 				link: "#",
 				image: "witcher/social/facebook.svg",
 			}
-			
+
 		],
-		menu: [
-			{
+		menu: [{
 				title: "Описание",
 				link: "#",
-			}, 
+			},
 			{
 				title: "Трейлер",
 				link: "#",
@@ -122,7 +215,15 @@ movieConstructor('.app', {
 			{
 				title: "Отзывы",
 				link: "#",
-			}, 
+			},
 		]
+	},
+	main: {
+		genre: "2019,фэнтези",
+		rating: "8",
+		description: `Ведьмак Геральт, мутант и убийца чудовищ, на своей верной лошади по кличке Плотва путешествует по Континенту. За тугой
+		мешочек чеканных монет этот мужчина избавит вас от всякой настырной нечисти — хоть от чудищ болотных, оборотней и даже
+		заколдованных принцесс.`,
+		trailer: "https://www.youtube.com/watch?v=P0oJqfLzZzQ"
 	}
 });
